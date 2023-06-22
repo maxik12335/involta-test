@@ -6,9 +6,11 @@
 
       <message-list 
         :messageList="messageList"
-        :offset="offset"
-        :addMessageCount="addMessageCount"
+        :fetchMessageListLength="fetchMessageListLength"
+        :addedMessage="addedMessage"
+        :messageLoading="messageLoading"        
         @updateOffset="updateOffset"
+        @removeMessageLoader="removeMessageLoader"
       />
 
       <chat-form 
@@ -37,57 +39,73 @@
     data() {
       return {
         messageList: [],
+        fetchMessageListLength: Number,
         loading: true,
+        messageLoading: false,
         offset: 0,
-        stopFetch: false,
-        addMessageCount: 0
+        stopFetch: true,
+        addedMessage: ""
       }
     },
 
     methods: {
       addMessage(messageListItem) {
-        this.messageList = [...this.messageList, messageListItem]
-        setTimeout(() => {
-          this.addMessageCount += 1 
-        }, 10);
+        this.addedMessage = messageListItem.title
+        this.messageList = [messageListItem, ...this.messageList]
       },
 
       updateOffset(newOffset) {
         if(this.stopFetch) {
-          return
-        } else {
-          this.offset = newOffset
-          this.fetchMessages(newOffset)        
+          this.offset += newOffset
+          this.fetchMessages(this.offset)
         }
       },
 
-      async fetchMessages(offset) {
-        try {
-          const response = await axios.get("https://numia.ru/api/getMessages?offset=" + offset)
-          response ? this.loading = false : ""
+      removeMessageLoader(value) {
+        this.messageLoading = value
+      },  
 
-          if(response.data.result.length === 0) {
-            this.stopFetch = true
-          }
+      async fetchMessages(offset) { 
+        this.messageLoading = true
+        const response = await axios.get("https://numia.ru/api/getMessages?offset=" + offset)        
 
-          if(response.data.result) {
-            const data = []          
-            response.data.result.map((item) => {
-              data.push({id: (Math.random() * 100), title: item})
-            })
-            this.messageList = [...data.reverse(), ...this.messageList]
-          }
-          
-          if(this.offset < 20) {
-            setTimeout(() => {
-              this.addMessageCount += 1 
-            }, 10);
-          }
-          
-        } catch(e) {
-          alert(e)
+        if(response.data.result && this.offset > 60) {
+          this.stopFetch = false
+          this.messageLoading = false
+          return
         }
-      }
+
+        if(response.data === "OOPS! TRY AGAIN!") {
+          this.messageLoading = true
+          if(this.offset === 0) {            
+            this.fetchMessages(offset)
+            return
+          } else {
+            this.offset -= 20
+            return
+          }          
+        }
+
+        if(response.data.result && response.data.result.length === 0) {
+          this.stopFetch = false
+        }
+
+        if(response.data.result === undefined) {
+          this.loading = true
+          this.fetchMessages(offset)
+        } else {
+          this.loading = false
+          const data = []  
+            
+          response.data.result.map((item) => {
+            data.push({id: (Math.random() * 100), title: item})
+          })
+
+          this.fetchMessageListLength = data.length
+
+          this.messageList = [...data.reverse(), ...this.messageList]
+        }     
+      }         
     },
 
     mounted() {
