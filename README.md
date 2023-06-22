@@ -1,12 +1,14 @@
 Тестовое задание: Involta
-Резюме: в корне проекта (.pdf)
+=====================
+Резюме:  в корне проекта (.pdf)
+-----------------------------------
 
-Запустить проект
-  git clone https://github.com/maxik12335/involta-test.git
-  npm i
-  npm run serve
+### Запустить проект  
+  -git clone https://github.com/maxik12335/involta-test.git  
+  -npm i    
+  -npm run serve  
 
-Самое важное и кратко
+### Самое важное и кратко
 1. Не вышло с Ref. Знаю, нельзя юзать DOM в Vue. Но без него идут баги
 document.querySelectorAll(".messages__list__item")[this.lengthResponseDate].scrollIntoView({
   block: "start"
@@ -20,5 +22,5 @@ document.querySelectorAll(".messages__list__item")[this.lengthResponseDate].scro
 
 4. На задачу в сумме потратил 2 дня (надо было вспомнить Vue)
 
-5. Буду рад code rewie :D
+5. Буду рад code rewie :D  
 ---> старался сделать код чище
