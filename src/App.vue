@@ -3,16 +3,14 @@
 
     <div v-if="!loading" class="chat">
       <h1 class="chat__title">Chat</h1>
-
       <message-list 
         :messageList="messageList"
-        :fetchMessageListLength="fetchMessageListLength"
-        :addedMessage="addedMessage"
-        :messageLoading="messageLoading"        
+        :lengthResponseDate="lengthResponseDate"
+        :messageLoading="messageLoading"     
+        :methodUpdateMessageList="methodUpdateMessageList"   
         @updateOffset="updateOffset"
         @removeMessageLoader="removeMessageLoader"
       />
-
       <chat-form 
         @createMessage="addMessage"
       />
@@ -39,18 +37,22 @@
     data() {
       return {
         messageList: [],
-        fetchMessageListLength: Number,
+        offset: 0,
+        lengthResponseDate: Number,
         loading: true,
         messageLoading: false,
-        offset: 0,
         stopFetch: true,
-        addedMessage: ""
+        methodUpdateMessageList: ""
       }
+    },
+
+    mounted() {
+      this.fetchMessages(this.offset)
     },
 
     methods: {
       addMessage(messageListItem) {
-        this.addedMessage = messageListItem.title
+        this.methodUpdateMessageList = "added"
         this.messageList = [messageListItem, ...this.messageList]
       },
 
@@ -61,56 +63,37 @@
         }
       },
 
-      removeMessageLoader(value) {
-        this.messageLoading = value
+      removeMessageLoader() {
+        this.messageLoading = false
       },  
 
       async fetchMessages(offset) { 
-        this.messageLoading = true
-        const response = await axios.get("https://numia.ru/api/getMessages?offset=" + offset)        
-
-        if(response.data.result && this.offset > 60) {
+        if(this.offset > 60) {
           this.stopFetch = false
           this.messageLoading = false
           return
         }
 
+        this.messageLoading = true
+
+        const response = await axios.get("https://numia.ru/api/getMessages?offset=" + offset)     
+                
         if(response.data === "OOPS! TRY AGAIN!") {
           this.messageLoading = true
-          if(this.offset === 0) {            
-            this.fetchMessages(offset)
-            return
-          } else {
-            this.offset -= 20
-            return
-          }          
-        }
-
-        if(response.data.result && response.data.result.length === 0) {
-          this.stopFetch = false
-        }
-
-        if(response.data.result === undefined) {
-          this.loading = true
-          this.fetchMessages(offset)
+          this.offset === 0 ? this.fetchMessages(offset) : this.offset -= 20
+          return        
         } else {
           this.loading = false
-          const data = []  
-            
-          response.data.result.map((item) => {
-            data.push({id: (Math.random() * 100), title: item})
-          })
+          this.messageLoading = false
 
-          this.fetchMessageListLength = data.length
+          const data = response.data.result.map((item) => ({id: (Math.random() * 100), title: item})).reverse()
+          this.messageList = [...data, ...this.messageList]
 
-          this.messageList = [...data.reverse(), ...this.messageList]
-        }     
+          this.lengthResponseDate = data.length
+          this.methodUpdateMessageList = "update"
+        }
       }         
     },
-
-    mounted() {
-      this.fetchMessages(this.offset)
-    }
   }
 </script>
 

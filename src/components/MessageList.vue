@@ -1,117 +1,41 @@
 <template>
   <div class="messages__list__box">
-    <ul class="messages__list" ref="list">
+    <ul class="messages__list" ref="messagesList">
       <ui-message-loader v-if="messageLoading" :message="loaderMessageText"/>
       <li
+        ref="messagesListItem"
         class="messages__list__item"
         v-for="messageListItem in messageList"
         :key="messageListItem.id"
       >
         <span>{{ messageListItem.title }}</span>
       </li>
-      <div ref="observer" class="observer"></div>
     </ul>
   </div>
 </template>
 
 <script>
-import UiMessageLoader from './ui/UiMessageLoader.vue';
+  import UiMessageLoader from './ui/UiMessageLoader.vue';
+  import messageListMixin from "@/mixins/messageListMixin.js"
+
   export default {
-  components: {  UiMessageLoader },
+    components: {  UiMessageLoader },
     props: {
       messageList: {
         type: Array,
         require: true
       },
-      fetchMessageListLength: {
+      lengthResponseDate: {
         type: Number,
-      },
-      addedMessage: {
-        type: String
       },
       messageLoading: {
         type: Boolean
-      }
-    },
-
-    data() {
-      return {
-        scrollTop: 0,
-        loaderMessageText: ""
-      }
-    },
-
-    watch: {
-      addedMessage() {
-        setTimeout(() => {
-          document.querySelector(".messages__list").scrollTop = 2
-          this.$emit("removeMessageLoader", false)
-        }, 501);
       },
-
-      messageList() {                
-        setTimeout(() => {          
-          document.querySelectorAll(".messages__list__item").forEach(item => {
-            item.classList.add("messages__list__item-show")
-          })
-
-          if(this.fetchMessageListLength === 13) {
-            document.querySelectorAll(".messages__list__item")[13].scrollIntoView({
-              block: "start"
-            })
-          } else if(this.fetchMessageListLength === 20) {
-            document.querySelectorAll(".messages__list__item")[20].scrollIntoView({
-              block: "start"
-            })
-          } else {
-            document.querySelectorAll(".messages__list__item")[0].scrollIntoView({
-              block: "start"
-            })
-          }
-
-          this.$emit("removeMessageLoader", false)
-        }, 500);
-      },
-
-      messageLoading() {
-        let time = 5      
-        this.loaderMessageText = ""
-        const timer = () => {
-          time -= 1
-          setTimeout(() => {
-            if(time === 0) {
-              this.loaderMessageText = "Возможно, стоит перезагрузить интернет"
-            } else {
-              timer()
-            }
-          }, 1000);
-        }
-
-        timer()
-
+      methodUpdateMessageList: {
+        type: String
       }
-    },
-  
-    mounted() {
-      document.querySelector(".messages__list").addEventListener("scroll", (event) => {        
-        this.scrollTop = event.target.scrollTop
-        if(this.scrollTop === 0) {
-          this.$emit("updateOffset", 20)
-        }
-      })      
-
-      setTimeout(() => {
-          document.querySelectorAll(".messages__list__item")[19].scrollIntoView({
-            block: "start"
-          })
-  
-          document.querySelectorAll(".messages__list__item").forEach(item => {
-            item.classList.add("messages__list__item-show")
-          })
-
-          this.$emit("removeMessageLoader", false)
-        }, 500);
-    }
+    },    
+    mixins: [messageListMixin]
   }
 </script>
 
